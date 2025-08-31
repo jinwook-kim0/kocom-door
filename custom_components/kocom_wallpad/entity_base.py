@@ -46,10 +46,10 @@ class KocomBaseEntity(RestoreEntity):
         )
         self._attr_device_info = DeviceInfo(
             connections={(self.gateway.host, self.unique_id)},
-            identifiers={(DOMAIN, f"{self.format_identifiers}")},
+            identifiers={(DOMAIN, f"{self.format_identifiers}_{self.device.key.room_index}")},
             manufacturer="KOCOM Co., Ltd",
             model="Smart Wallpad",
-            name=f"{self.format_identifiers}",
+            name=f"Room {self.device.key.room_index or 0} {self.format_identifiers}",
             via_device=(DOMAIN, str(self.gateway.host)),
         )
         
