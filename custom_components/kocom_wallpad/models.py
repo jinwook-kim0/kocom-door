@@ -59,6 +59,13 @@ ELEVATOR_DIRECTION_MAP = {
     0x03: "arrival"
 }
 
+ROOM_MAP = {
+    0: "거실",
+    1: "방1",
+    2: "방2",
+    3: "방3",
+    4: "주방"
+}
 
 @dataclass(frozen=True)
 class DeviceKey:
@@ -81,6 +88,16 @@ class DeviceKey:
 class DeviceState:
     """Device state."""
     key: DeviceKey
+    name: str
     platform: Platform
     attribute: dict[str, Any] 
     state: Union[dict[str, Any], bool, int, float, str]
+
+    def __init__(self, key=None, platform=None, attribute=None, state=None, name=None):
+        self.key = key
+        self.platform = platform
+        self.attribute = attribute
+        self.state = state
+        if name is None:
+            self.name = f'{ROOM_MAP[self.key.room_index]} {self.key.device_type.name} {self.key.device_index}'
+        
