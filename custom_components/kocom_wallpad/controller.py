@@ -309,7 +309,7 @@ class KocomController:
             device_index=2,
             sub_type = SubType.DOOR_LOCK
         )
-        platform = Platform.Button
+        platform = Platform.BUTTON
         attribute = {"device_class": None}
         state = frame.payload[5] == 0x24
         dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
