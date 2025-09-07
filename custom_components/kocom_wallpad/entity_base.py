@@ -13,6 +13,7 @@ from homeassistant.components.climate import ClimateEntityDescription
 from homeassistant.components.fan import FanEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.button import ButtonEntityDescription
 
 from .const import DOMAIN, DeviceType, SubType
 
@@ -23,7 +24,8 @@ ENTITY_DESCRIPTION_MAP = {
     Platform.CLIMATE: ClimateEntityDescription,
     Platform.FAN: FanEntityDescription,
     Platform.SENSOR: SensorEntityDescription,
-    Platform.BINARY_SENSOR: BinarySensorEntityDescription
+    Platform.BINARY_SENSOR: BinarySensorEntityDescription,
+    Platform.BUTTON: ButtonEntityDescription
 }
 
 
