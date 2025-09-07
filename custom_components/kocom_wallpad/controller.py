@@ -277,40 +277,45 @@ class KocomController:
             return states
         
     def _handle_doorbell(self, frame: PacketFrame) -> List[DeviceState]:
-        if frame.payload[5] in (0x01, 0x02):
-            key = DeviceKey(
-                device_type=frame.dev_type,
-                room_index=frame.dev_room,
-                device_index = 0,
-                sub_type=SubType.BELL,
-            )
-            platform = Platform.BINARY_SENSOR
-            attribute = {"device_class": BinarySensorDeviceClass.SOUND}
-            dev = DeviceState(key=key, platform=platform, attribute=attribute, state=True)
-            return dev
-        elif frame.payload[5] in (0x03, 0x04):
-            key = DeviceKey(
-                device_type=frame.dev_type,
-                room_index=frame.dev_room,
-                device_index = 1,
-                sub_type = SubType.CALL
-            )
-            platform = Platform.SWITCH
-            attribute = {}
-            state = frame.payload[5] == 0x03
-            dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
-            return dev
-        elif frame.payload[5] == 0x24:
-            key = DeviceKey(
-                device_type=frame.dev_type,
-                room_index=frame.dev_room,
-                device_index=2,
-                sub_type = SubType.DOOR_LOCK
-            )
-            platform = Platform.Button
-            attribute = {"device_class": None}
-            dev = DeviceState(key=key, platform=platform, attribute=attribute, state=True)
-            return dev
+        states: List[DeviceState] = []
+
+        key = DeviceKey(
+            device_type=frame.dev_type,
+            room_index=frame.dev_room,
+            device_index = 0,
+            sub_type=SubType.BELL,
+        )
+        platform = Platform.BINARY_SENSOR
+        attribute = {"device_class": BinarySensorDeviceClass.SOUND}
+        state = frame.payload[5] in (0x01, 0x02)
+        dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
+        states.append(dev)
+
+        key = DeviceKey(
+            device_type=frame.dev_type,
+            room_index=frame.dev_room,
+            device_index = 1,
+            sub_type = SubType.CALL
+        )
+        platform = Platform.SWITCH
+        attribute = {}
+        state = frame.payload[5] == 0x03
+        dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
+        states.append(dev)
+
+        key = DeviceKey(
+            device_type=frame.dev_type,
+            room_index=frame.dev_room,
+            device_index=2,
+            sub_type = SubType.DOOR_LOCK
+        )
+        platform = Platform.Button
+        attribute = {"device_class": None}
+        state = frame.payload[5] == 0x24
+        dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
+        states.append(dev)
+        return states
+        
 
     
 

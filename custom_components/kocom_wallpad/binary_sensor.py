@@ -19,7 +19,6 @@ from .gateway import KocomGateway
 from .models import DeviceState
 from .entity_base import KocomBaseEntity
 from .const import DOMAIN, LOGGER, SubType
-import asyncio
 
 
 async def async_setup_entry(
@@ -77,6 +76,7 @@ class KocomDoorBell(KocomBinarySensor):
         self.hass.async_create_task(self._auto_reset())
         
     async def _auto_reset(self):
+        import asyncio
         await asyncio.sleep(2)
         self._device.state = False
         self.async_write_ha_state()
