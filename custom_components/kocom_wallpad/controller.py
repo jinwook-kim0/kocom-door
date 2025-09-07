@@ -174,26 +174,25 @@ class KocomController:
 
     def _split_buf(self) -> List[bytes]:
         packets: List[bytes] = []
-        buf = self._rx_buf
-        while True:
-            start = buf.find(PACKET_PREFIX)
+
+        while len(self._rx_buf) >= PACKET_LEN:
+            start = self._rx_buf.find(PACKET_PREFIX)
             if start < 0:
-                # 프리픽스 이전의 쓰레기 데이터 제거
-                buf.clear()
                 break
-            if start > 0:
-                del buf[:start]
-            if len(buf) < PACKET_LEN:
-                # 더 받을 때까지 대기
+
+            self._rx_buf = self._rx_buf[start:]
+            if len(self._rx_buf) < PACKET_LEN:
                 break
+
             # 고정 길이 확인 후 서픽스 검사
-            candidate = bytes(buf[:PACKET_LEN])
+            candidate = bytes(self._rx_buf[:PACKET_LEN])
             if not candidate.endswith(PACKET_SUFFIX):
                 # 한 바이트 밀어서 재탐색 (프레이밍 어긋남 복구)
-                del buf[0]
+                self._rx_buf = self._rx_buf[1:]
                 continue
-            packets.append(candidate)
-            del buf[:PACKET_LEN]
+            else: 
+                packets.append(candidate)
+                self._rx_buf = self._rx_buf[PACKET_LEN:]
         return packets
 
     def _dispatch_packet(self, packet: bytes) -> None:
@@ -225,6 +224,7 @@ class KocomController:
         elif frame.dev_type == DeviceType.AIRQUALITY:
             dev_state = self._handle_airquality(frame)
         elif frame.dev_type == DeviceType.DOOR:
+            LOGGER.debug("DOOR type: %s (raw=%s)", frame.dev_type.name, frame.raw.hex())
             dev_state = self._handle_door(frame)
         else:
             LOGGER.debug("Unhandled device type: %s (raw=%s)", frame.dev_type.name, frame.raw.hex())
