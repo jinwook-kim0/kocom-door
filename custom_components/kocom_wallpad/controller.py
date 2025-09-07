@@ -748,7 +748,7 @@ class KocomController:
                     command = bytes([0xff])
                     data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x24, 0x00, 0x97])
             elif sub_type == SubType.CALL:
-                if room_index = 0x00:
+                if room_index == 0x00:
                     type_bytes = bytes([0x79, 0xBC])
                     padding = bytes([0x02])
                     dest_dev = bytes([0x02])
