@@ -225,7 +225,7 @@ class KocomController:
             dev_state = self._handle_airquality(frame)
         elif frame.dev_type == DeviceType.DOOR:
             LOGGER.debug("DOOR type: %s (raw=%s)", frame.dev_type.name, frame.raw.hex())
-            dev_state = self._handle_door(frame)
+            dev_state = self._handle_doorbell(frame)
         else:
             LOGGER.debug("Unhandled device type: %s (raw=%s)", frame.dev_type.name, frame.raw.hex())
             return
