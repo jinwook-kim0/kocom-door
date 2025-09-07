@@ -198,7 +198,7 @@ class KocomController:
 
     def _dispatch_packet(self, packet: bytes) -> None:
         frame = PacketFrame(packet)
-        if self._checksum(packet[2:18]) != frame.checksum:
+        if self._checksum(packet[2:18]) != frame.checksum and frame.dev_type != DeviceType.DOOR:
             LOGGER.debug("Packet checksum is invalid. raw=%s", frame.raw.hex())
             return
 
