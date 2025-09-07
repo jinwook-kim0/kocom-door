@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
 
 from .gateway import KocomGateway
 from .models import DeviceState
@@ -70,15 +71,23 @@ class KocomBinarySensor(KocomBaseEntity, BinarySensorEntity):
         return self._device.attribute.get("extra_state", None)
     
 class KocomDoorBell(KocomBinarySensor):
+    def __init__(self, gateway: KocomGateway, device: DeviceState) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(gateway, device)
+        self._reset_timer = None
+
     @callback
     def update_from_state(self) -> None:
         self.async_write_ha_state()
         if self._device.state:
+            if self._reset_timer:
+                self._reset_timer()
+            self._reset_timer = async_call_later(self.hass, 2, self._auto_reset_callback)
+
             self.hass.async_create_task(self._auto_reset())
         
-    async def _auto_reset(self) -> None:
-        import asyncio
-        await asyncio.sleep(2)
+    async def _auto_reset_callback(self, now):
         LOGGER.debug("Async Auto Reset")
         self._device.state = False
         self.async_write_ha_state()
+        self._reset_timer = None
