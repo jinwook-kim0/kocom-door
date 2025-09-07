@@ -79,5 +79,6 @@ class KocomDoorBell(KocomBinarySensor):
     async def _auto_reset(self) -> None:
         import asyncio
         await asyncio.sleep(2)
+        LOGGER.debug("Async Auto Reset")
         self._device.state = False
         self.async_write_ha_state()
