@@ -27,6 +27,8 @@ DEVICE_TYPE_MAP = {
     0x44: DeviceType.ELEVATOR,
     0x60: DeviceType.MOTION,
     0x98: DeviceType.AIRQUALITY,
+    0x02: DeviceType.DOOR,
+    0x08: DeviceType.DOOR,
 }
 
 AIRCONDITIONER_HVAC_MAP = {

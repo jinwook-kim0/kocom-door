@@ -41,8 +41,58 @@ REV_DT_MAP = {v: k for k, v in DEVICE_TYPE_MAP.items()}
 REV_AC_HVAC_MAP = {v: k for k, v in AIRCONDITIONER_HVAC_MAP.items()}
 REV_AC_FAN_MAP = {v: k for k, v in AIRCONDITIONER_FAN_MAP.items()}
 REV_VENT_PRESET_MAP = {v: k for k, v in VENTILATION_PRESET_MAP.items()}
+"""
+0xAA55
+[2] = 7B
+type [3] = 9C
+[4] = 02
+dest [5, 6] = 0200
+src [7, 8] = FFFF
+[9] = FF
+[10:18] = FF 31 FF FF FF 01 01 71
+[18] = C8
 
+[2] 7B 
+[3] 9C 
+[4] 02 
+dest [5, 6] 02 00 
+src [7, 8] FF FF 
+[9] FF 
+[10: 18] FF 31 FF FF FF 02 01 24 
+[18] 9B 0D 0D
+"""
+"""
+Call AA55
+[2] = 79
+type [3] BC
+[4] 02
+dest [5, 6] 0200
+src [7, 8] 31FF
+[9] FF
+[10: 18] = FF 61 FF FF FF 03 00 08
+[18] D30D0D
 
+Open AA55
+[2] = 79
+type [3] BC
+[4] 02
+dest [5, 6] 0200
+src [7, 8] 31FF
+[9] FF
+[10: 18] FF 61 FF FF FF 24 00 97
+[18] A20D0D
+
+Drop AA55
+[2] 79
+type [3] BC
+[4] 02
+dest [5, 6] 0200
+src [7, 8] 31FF
+[9] FF
+[10:18] FF 61 FF FF FF 04 00 91
+[18] 44 0D 0D
+
+"""
 @dataclass(slots=True, frozen=True)
 class PacketFrame:
     """Packet frame."""
@@ -78,6 +128,11 @@ class PacketFrame:
             return (self.src[0], self.src[1])
         elif self.src[0] == 0x01:
             return (self.dest[0], self.dest[1])
+        elif (self.raw[2] >> 4) & 0x0F == 0x07:
+            if self.dest[0] in (0x08, 0x00):
+                return (0x08, 0x01)
+            else:
+                return (self.dest[0], self.dest[1])
         else:
             LOGGER.warning("Peer resolution failed: dest=%s, src=%s", self.dest.hex(), self.src.hex())
             return (0, 0)
@@ -86,7 +141,8 @@ class PacketFrame:
     def dev_type(self) -> DeviceType:
         dev_type = DEVICE_TYPE_MAP.get(self.peer[0], None)
         if dev_type is None:
-            LOGGER.debug("Unknown device type code=%s, raw=%s", hex(self.peer[0]), self.raw.hex())
+            LOGGER.debug(f"Unknown device type code={hex(self.peer[0])}, raw={self.raw.hex()}, packet_type={hex(self.packet_type)}, src={self.src.hex()}, dest={self.dest.hex()}, command={hex(self.command)}, payload={self.payload.hex()}")
+            #LOGGER.debug("Unknown device type code=%s, raw=%s", hex(self.peer[0]), self.raw.hex())
             dev_type = DeviceType.UNKNOWN
         return dev_type
 
@@ -168,6 +224,8 @@ class KocomController:
             dev_state = self._handle_motion(frame)
         elif frame.dev_type == DeviceType.AIRQUALITY:
             dev_state = self._handle_airquality(frame)
+        elif frame.dev_type == DeviceType.DOOR:
+            dev_state = self._handle_door(frame)
         else:
             LOGGER.debug("Unhandled device type: %s (raw=%s)", frame.dev_type.name, frame.raw.hex())
             return
@@ -217,6 +275,44 @@ class KocomController:
                     dev._is_register = False
                 states.append(dev)
             return states
+        
+    def _handle_doorbell(self, frame: PacketFrame) -> List[DeviceState]:
+        if frame.payload[5] in (0x01, 0x02):
+            key = DeviceKey(
+                device_type=frame.dev_type,
+                room_index=frame.dev_room,
+                device_index = 0,
+                sub_type=SubType.BELL,
+            )
+            platform = Platform.BINARY_SENSOR
+            attribute = {"device_class": BinarySensorDeviceClass.SOUND}
+            dev = DeviceState(key=key, platform=platform, attribute=attribute, state=True)
+            return dev
+        elif frame.payload[5] in (0x03, 0x04):
+            key = DeviceKey(
+                device_type=frame.dev_type,
+                room_index=frame.dev_room,
+                device_index = 1,
+                sub_type = SubType.CALL
+            )
+            platform = Platform.SWITCH
+            attribute = {}
+            state = frame.payload[5] == 0x03
+            dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
+            return dev
+        elif frame.payload[5] == 0x24:
+            key = DeviceKey(
+                device_type=frame.dev_type,
+                room_index=frame.dev_room,
+                device_index=2,
+                sub_type = SubType.DOOR_LOCK
+            )
+            platform = Platform.Button
+            attribute = {"device_class": None}
+            dev = DeviceState(key=key, platform=platform, attribute=attribute, state=True)
+            return dev
+
+    
 
     def _handle_thermostat(self, frame: PacketFrame) -> List[DeviceState]:
         states: List[DeviceState] = []
@@ -640,6 +736,30 @@ class KocomController:
             src_dev = bytes([0x44])
             src_room = bytes([room_index & 0xFF])
             command = bytes([0x01])
+        elif device_type == DeviceType.DOOR:
+            if sub_type == SubType.DOOR_LOCK:
+                if action == "turn_on" and room_index == 0x00:
+                    type_bytes = bytes([0x79, 0xBC])
+                    padding = bytes([0x02])
+                    dest_dev = bytes([0x02])
+                    dest_room = bytes([0x00])
+                    src_dev = bytes([0x31])
+                    src_room = bytes([0xff])
+                    command = bytes([0xff])
+                    data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x24, 0x00, 0x97])
+            elif sub_type == SubType.CALL:
+                if room_index = 0x00:
+                    type_bytes = bytes([0x79, 0xBC])
+                    padding = bytes([0x02])
+                    dest_dev = bytes([0x02])
+                    dest_room = bytes([0x00])
+                    src_dev = bytes([0x31])
+                    src_room = bytes([0xff])
+                    command = bytes([0xff])
+                    if action == "turn_on":
+                        data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x03, 0x00, 0x08])
+                    elif action == "turn_off":
+                        data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x04, 0x00, 0x91])
         else:
             raise ValueError(f"Invalid device generator: {device_type}")
 

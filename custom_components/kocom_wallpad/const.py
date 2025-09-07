@@ -16,6 +16,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
 ]
 
 PACKET_PREFIX = bytes([0xAA, 0x55])
@@ -43,6 +44,7 @@ class DeviceType(IntEnum):
     ELEVATOR = 9
     MOTION = 10
     AIRQUALITY = 11
+    DOOR = 12
 
 
 class SubType(IntEnum):
@@ -59,3 +61,7 @@ class SubType(IntEnum):
     VOC = 9
     TEMP = 10
     HUMIDITY = 11
+    BELL = 12
+    CALL = 13
+    DOOR_LOCK = 14
+    

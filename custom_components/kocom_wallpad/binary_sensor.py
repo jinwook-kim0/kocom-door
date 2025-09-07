@@ -18,7 +18,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .gateway import KocomGateway
 from .models import DeviceState
 from .entity_base import KocomBaseEntity
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, SubType
+import asyncio
 
 
 async def async_setup_entry(
@@ -37,7 +38,7 @@ async def async_setup_entry(
 
         entities: List[KocomBinarySensor] = []
         for dev in devices:
-            entity = KocomBinarySensor(gateway, dev)
+            entity = KocomBinarySensor(gateway, dev) if dev.key.sub_type != SubType.BELL else KocomDoorBell(gateway, dev)
             entities.append(entity)
         if entities:
             async_add_entities(entities)
@@ -69,3 +70,13 @@ class KocomBinarySensor(KocomBaseEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         return self._device.attribute.get("extra_state", None)
     
+class KocomDoorBell(KocomBinarySensor):
+    @callback
+    def update_from_state(self) -> None:
+        self.async_write_ha_state()
+        self.hass.async_create_task(self._auto_reset())
+        
+    async def _auto_reset(self):
+        await asyncio.sleep(2)
+        self._device.state = False
+        self.async_write_ha_state()
