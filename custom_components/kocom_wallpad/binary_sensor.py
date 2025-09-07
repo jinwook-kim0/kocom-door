@@ -73,9 +73,10 @@ class KocomDoorBell(KocomBinarySensor):
     @callback
     def update_from_state(self) -> None:
         self.async_write_ha_state()
-        self.hass.async_create_task(self._auto_reset())
+        if self._device.state:
+            self.hass.async_create_task(self._auto_reset)
         
-    async def _auto_reset(self):
+    async def _auto_reset(self) -> None:
         import asyncio
         await asyncio.sleep(2)
         self._device.state = False

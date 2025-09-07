@@ -752,6 +752,15 @@ class KocomController:
                     src_room = bytes([0xff])
                     command = bytes([0xff])
                     data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x24, 0x00, 0x97])
+                elif action == "turn_on" and room_index == 0x01:
+                    type_bytes = bytes([0x79, 0xBC])
+                    padding = bytes([0x08])
+                    dest_dev = bytes([0x02])
+                    dest_room = bytes([0x00])
+                    src_dev = bytes([0xff])
+                    src_room = bytes([0xff])
+                    command = bytes([0xff])
+                    data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x24, 0x00, 0xb9])
             elif sub_type == SubType.CALL:
                 if room_index == 0x00:
                     type_bytes = bytes([0x79, 0xBC])
@@ -765,6 +774,22 @@ class KocomController:
                         data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x03, 0x00, 0x08])
                     elif action == "turn_off":
                         data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x04, 0x00, 0x91])
+                elif room_index == 0x01:
+                    type_bytes = bytes([0x79, 0xbc])
+                    padding = bytes([0x08])
+                    dest_dev = bytes([0x02])
+                    dest_room = bytes([0x00])
+                    src_dev = bytes([0xff])
+                    src_room = bytes([0xff])
+                    command = bytes([0xff])
+                    if action == "turn_on":
+                        data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x03, 0x00, 0x26])
+                    elif action == "turn_off":
+                        padding = bytes([0x00])
+                        dest_dev = bytes([0x00])
+                        src_dev = bytes([0x00])
+                        data = bytes([0xff, 0x00, 0xff, 0xff, 0xff, 0x04, 0x00, 0xc5])
+
         else:
             raise ValueError(f"Invalid device generator: {device_type}")
 
