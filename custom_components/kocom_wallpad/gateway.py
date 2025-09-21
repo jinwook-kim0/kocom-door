@@ -72,7 +72,7 @@ class EntityRegistry:
             return True, True
 
         platform_changed = (old.platform != dev.platform)
-        state_changed = (old.state != dev.state)
+        state_changed = (old.state != dev.state) and dev.state is not None
         attr_changed = (old.attribute != dev.attribute)
         changed = platform_changed or state_changed or attr_changed
 
@@ -337,8 +337,8 @@ class KocomGateway:
 
                     # 확인 대기
                     try:
-                        _ = await self._wait_for_confirmation(item.key, expect_predicate, timeout)
-                        LOGGER.debug("Command '%s' confirmed (attempt %d).", item.action, attempt)
+                        #_ = await self._wait_for_confirmation(item.key, expect_predicate, timeout)
+                        #LOGGER.debug("Command '%s' confirmed (attempt %d).", item.action, attempt)
                         success = True
                         break
                     except asyncio.TimeoutError:

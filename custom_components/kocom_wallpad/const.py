@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 
-DOMAIN = "kocom_wallpad"
+DOMAIN = "kocom_door"
 PLATFORMS = [
     Platform.LIGHT,
     Platform.SWITCH,
@@ -44,7 +44,8 @@ class DeviceType(IntEnum):
     ELEVATOR = 9
     MOTION = 10
     AIRQUALITY = 11
-    DOOR = 12
+    INTERNAL_DOOR = 12
+    COMMON_DOOR = 13
 
 
 class SubType(IntEnum):

@@ -50,7 +50,7 @@ class KocomBaseEntity(RestoreEntity):
             connections={(self.gateway.host, self.unique_id)},
             identifiers={(DOMAIN, f"{self.format_identifiers}_{self._device.key.room_index}")},
             manufacturer="KOCOM Co., Ltd",
-            model="Smart Wallpad",
+            model="Smart Wallpad Door",
             name=f"Room {self._device.key.room_index or 0} {self.format_identifiers}",
             via_device=(DOMAIN, str(self.gateway.host)),
         )

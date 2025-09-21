@@ -1,6 +1,6 @@
 {
-    "domain": "kocom_wallpad",
-    "name": "Kocom Wallpad",
+    "domain": "kocom_door",
+    "name": "Kocom Door",
     "codeowners": [
         "@lunDreame"
     ],

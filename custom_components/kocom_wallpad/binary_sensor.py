@@ -83,8 +83,6 @@ class KocomDoorBell(KocomBinarySensor):
             if self._reset_timer:
                 self._reset_timer()
             self._reset_timer = async_call_later(self.hass, 2, self._auto_reset_callback)
-
-            self.hass.async_create_task(self._auto_reset())
         
     async def _auto_reset_callback(self, now):
         LOGGER.debug("Async Auto Reset")
