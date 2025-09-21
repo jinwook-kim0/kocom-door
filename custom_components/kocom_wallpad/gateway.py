@@ -190,8 +190,9 @@ class KocomGateway:
 
         is_new, changed = self.registry.upsert(dev, allow_insert=allow_insert)
         if is_new:
-            if dev.key.sub_type == SubType.CALL
-            dev.key.state = False
+            if dev.key.sub_type == SubType.CALL:
+                dev.key.state = False
+
             LOGGER.info("New device has been detected. Register -> %s", dev.key)
             async_dispatcher_send(
                 self.hass,
