@@ -465,16 +465,16 @@ class KocomController:
                 src_dev = bytes([0x31])
                 src_room = bytes([0xff])
                 data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x24, 0x00, 0x97])
-        elif sub_type == SubType.CALL:
-                padding = bytes([0x02])
-                dest_dev = bytes([0x02])
-                dest_room = bytes([0x00])
-                src_dev = bytes([0x31])
-                src_room = bytes([0xff])
-                if action == "turn_on":
-                    data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x03, 0x00, 0x08])
-                elif action == "turn_off":
-                    data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x04, 0x00, 0x91])
+            elif sub_type == SubType.CALL:
+                    padding = bytes([0x02])
+                    dest_dev = bytes([0x02])
+                    dest_room = bytes([0x00])
+                    src_dev = bytes([0x31])
+                    src_room = bytes([0xff])
+                    if action == "turn_on":
+                        data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x03, 0x00, 0x08])
+                    elif action == "turn_off":
+                        data = bytes([0xff, 0x61, 0xff, 0xff, 0xff, 0x04, 0x00, 0x91])
         elif device_type == DeviceType.COMMON_DOOR:
             if sub_type == SubType.DOOR_LOCK and action == "turn_on":
                 padding = bytes([0x08])
