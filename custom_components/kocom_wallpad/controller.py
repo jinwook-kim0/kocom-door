@@ -220,7 +220,7 @@ class PacketFrame:
 
     @property
     def peer(self) -> tuple[int, int]:
-        if (self.raw[2] >> 4) & 0x0F == 0x07:
+        if self.raw[2] == 0x7b and self.raw[3] == 0x9c:
             if self.dest[0] == 0x08:
                 return (0x08, 0x00)
             else:

@@ -78,6 +78,7 @@ class KocomDoorBell(KocomBinarySensor):
 
     @callback
     def update_from_state(self) -> None:
+        LOGGER.debug(f"BinarySensor:: update_from_state (state: {self._device.state})")
         self.async_write_ha_state()
         if self.is_on:
             if self._reset_timer:
