@@ -77,6 +77,7 @@ class KocomDoorBell(KocomBinarySensor):
         self._reset_timer = None
 
     async def async_added_to_hass(self):
+        LOGGER.debug("DoorBell {self._device.key.device_type.name} async_added_to_hass")
         sig = self.gateway.async_signal_device_updated(self._device.key.unique_id)
 
         @callback
