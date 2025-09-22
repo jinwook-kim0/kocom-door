@@ -38,7 +38,10 @@ async def async_setup_entry(
 
         entities: List[KocomBinarySensor] = []
         for dev in devices:
-            entity = KocomBinarySensor(gateway, dev) if dev.key.sub_type != SubType.BELL else KocomDoorBell(gateway, dev)
+            if dev.key.sub_type in (SubType.BELL, SubType.PRESENCE):
+                entity = KocomDoorBell(gateway, dev)
+            else:
+                entity = KocomBinarySensor(gateway, dev)
             entities.append(entity)
         if entities:
             async_add_entities(entities)

@@ -327,9 +327,10 @@ class KocomController:
         )
         platform = Platform.BINARY_SENSOR
         attribute = {"device_class": BinarySensorDeviceClass.SOUND}
-        state = frame.payload[5] in (0x01, 0x02)
+        state = frame.payload[5] == 0x1 
         dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
         states.append(dev)
+
      
         key = DeviceKey(
             device_type=frame.dev_type,
@@ -355,6 +356,19 @@ class KocomController:
         state = frame.payload[5] == 0x24
         dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
         states.append(dev)
+
+        key = DeviceKey(
+            device_type=frame.dev_type,
+            room_index=frame.dev_room,
+            device_index = 3,
+            sub_type=SubType.PRESENCE
+        )
+        platform = Platform.BINARY_SENSOR
+        attribute = {"device_class": BinarySensorDeviceClass.MOTION}
+        state = frame.payload[5] == 0x2
+        dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
+        states.append(dev)
+
         return states
        
 

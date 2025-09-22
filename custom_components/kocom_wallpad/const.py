@@ -65,4 +65,5 @@ class SubType(IntEnum):
     BELL = 12
     CALL = 13
     DOOR_LOCK = 14
+    PRESENCE = 15
     

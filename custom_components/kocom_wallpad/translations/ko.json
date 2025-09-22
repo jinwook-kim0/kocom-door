@@ -41,6 +41,12 @@
             },
             "elevator": {
                 "name": "엘리베이터 {id}"
+            },
+            "internal_door-call": {
+                "name": "세대현관 통화"
+            },
+            "common_door-call": {
+                "name": "공동현관 통화"
             }
         },
         "climate": {
@@ -100,6 +106,23 @@
             },
             "ventilation-errcode": {
                 "name": "환기 오류코드 {id}"
+            },
+            "internal_door-bell": {
+                "name": "세대현관 호출"
+            },
+            "common_door-bell": {
+                "name": "공동현관 호출"
+            },
+            "internal_door-presence": {
+                "name": "세대현관 동작감지"
+            }
+        },
+        "button": {
+            "internal_door-door_lock": {
+                "name": "세대현관 문열기"
+            },
+            "common_door-door_lock": {
+                "name": "공동현관 문열기"
             }
         }
     }
