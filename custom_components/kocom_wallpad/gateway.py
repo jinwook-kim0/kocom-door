@@ -73,6 +73,9 @@ class EntityRegistry:
             return True, True
 
         platform_changed = (old.platform != dev.platform)
+
+        if dev.state is None:
+            dev.state = old.state
         state_changed = (old.state != dev.state) and dev.state is not None
         attr_changed = (old.attribute != dev.attribute)
         changed = platform_changed or state_changed or attr_changed

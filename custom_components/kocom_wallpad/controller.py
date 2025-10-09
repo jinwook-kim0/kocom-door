@@ -341,7 +341,7 @@ class KocomController:
         platform = Platform.SWITCH
         attribute = {}
 
-        state = frame.payload[5] == 0x03
+        state = frame.payload[5] == 0x03 if frame.payload[5] in (0x03, 0x04) else None
         dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
         states.append(dev)
 
@@ -396,10 +396,7 @@ class KocomController:
         platform = Platform.SWITCH
         attribute = {}
 
-        if frame.payload[5] in (0x03, 0x04):
-            state = frame.payload[5] == 0x03
-        else:
-            state = None
+        state = frame.payload[5] == 0x03 if frame.payload in (0x03, 0x04) else None
         dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
         states.append(dev)
 
