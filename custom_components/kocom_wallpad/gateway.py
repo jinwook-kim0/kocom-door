@@ -20,6 +20,7 @@ from .const import (
     IDLE_GAP_SEC,
     SEND_RETRY_MAX,
     SEND_RETRY_GAP,
+    RECOVERY_COOLDOWN_SEC,
     DeviceType,
 )
 from .models import DeviceKey, DeviceState
@@ -115,7 +116,9 @@ class KocomGateway:
         hass: HomeAssistant, 
         entry: ConfigEntry,
         host: str,
-        port: int | None
+        port: int | None,
+        recovery_service: str = "",
+        recovery_failures: int = 3,
     ) -> None:
         """Initialize the gateway."""
         self.hass = hass
@@ -133,6 +136,10 @@ class KocomGateway:
         self._last_tx_monotonic: float = 0.0
         self._restore_mode: bool = False
         self._force_register_uid: str | None = None
+        self.recovery_service = (recovery_service or "").strip()
+        self.recovery_failures = max(0, int(recovery_failures))
+        self._failed_command_count = 0
+        self._last_recovery_monotonic = 0.0
 
     async def async_start(self) -> None:
         LOGGER.info("Starting gateway - %s:%s", self.host, self.port or "")
@@ -148,11 +155,31 @@ class KocomGateway:
             self._task_reader.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._task_reader
+            self._task_reader = None
         if self._task_sender:
             self._task_sender.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._task_sender
+            self._task_sender = None
+        self._cancel_pending_commands()
+        self._cancel_pending_waiters()
         await self.conn.close()
+
+    def _cancel_pending_commands(self) -> None:
+        while True:
+            try:
+                item = self._tx_queue.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+            if not item.future.done():
+                item.future.set_result(False)
+            self._tx_queue.task_done()
+
+    def _cancel_pending_waiters(self) -> None:
+        for waiter in self._pendings:
+            if not waiter.future.done():
+                waiter.future.cancel()
+        self._pendings.clear()
 
     def is_idle(self) -> bool:
         return self.conn.idle_since() >= IDLE_GAP_SEC
@@ -294,6 +321,7 @@ class KocomGateway:
 
     async def _sender_loop(self) -> None:
         LOGGER.debug("Starting sender loop")
+        item = None
         try:
             while True:
                 item = await self._tx_queue.get()
@@ -331,7 +359,7 @@ class KocomGateway:
 
                     # 전송
                     try:
-                        await self.conn.send(packet)
+                        sent = await self.conn.send(packet)
                     except Exception as e:
                         LOGGER.warning("Send failed on attempt %d: %s", attempt, e)
                         if attempt < SEND_RETRY_MAX:
@@ -339,6 +367,17 @@ class KocomGateway:
                             continue
                         else:
                             break
+                    if sent != len(packet):
+                        LOGGER.warning(
+                            "Send incomplete on attempt %d: %d/%d bytes",
+                            attempt,
+                            sent,
+                            len(packet),
+                        )
+                        if attempt < SEND_RETRY_MAX:
+                            await asyncio.sleep(SEND_RETRY_GAP)
+                            continue
+                        break
 
                     self._last_tx_monotonic = asyncio.get_running_loop().time()
 
@@ -358,10 +397,71 @@ class KocomGateway:
                         else:
                             LOGGER.error("Command '%s' failed after %d attempts.", item.action, SEND_RETRY_MAX)
 
+                if success:
+                    self._failed_command_count = 0
+                else:
+                    await self._async_handle_command_failure(item.action)
+
                 if not item.future.done():
                     item.future.set_result(success)
 
                 self._tx_queue.task_done()
+                item = None
         except asyncio.CancelledError:
+            if item is not None:
+                if not item.future.done():
+                    item.future.set_result(False)
+                self._tx_queue.task_done()
             LOGGER.debug("Sender loop cancelled")
             raise
+
+    async def _async_handle_command_failure(self, action: str) -> None:
+        """Recover after a command could not be sent."""
+        self._failed_command_count += 1
+
+        if self.conn._is_connected():
+            LOGGER.warning(
+                "Command '%s' could not be sent. Reconnecting to recover stale connection.",
+                action,
+            )
+            await self.conn.reconnect()
+
+        if not self.recovery_service or self.recovery_failures <= 0:
+            return
+        if self._failed_command_count < self.recovery_failures:
+            return
+
+        now = asyncio.get_running_loop().time()
+        if now - self._last_recovery_monotonic < RECOVERY_COOLDOWN_SEC:
+            LOGGER.warning(
+                "Recovery service '%s' skipped by cooldown after %d failed commands.",
+                self.recovery_service,
+                self._failed_command_count,
+            )
+            return
+
+        self._last_recovery_monotonic = now
+        if await self._async_call_recovery_service():
+            self._failed_command_count = 0
+
+    async def _async_call_recovery_service(self) -> bool:
+        """Call a configured Home Assistant service for EW recovery."""
+        service_id = self.recovery_service
+        if "." not in service_id:
+            LOGGER.error("Invalid recovery service: %s", service_id)
+            return False
+
+        if service_id.startswith("automation."):
+            LOGGER.warning("Triggering recovery automation: %s", service_id)
+            await self.hass.services.async_call(
+                "automation",
+                "trigger",
+                {"entity_id": service_id},
+                blocking=False,
+            )
+            return True
+
+        domain, service = service_id.split(".", 1)
+        LOGGER.warning("Calling recovery service: %s", service_id)
+        await self.hass.services.async_call(domain, service, {}, blocking=False)
+        return True

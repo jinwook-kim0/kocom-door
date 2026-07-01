@@ -270,6 +270,12 @@ class KocomController:
         while len(self._rx_buf) >= PACKET_LEN:
             start = self._rx_buf.find(PACKET_PREFIX)
             if start < 0:
+                keep_len = len(PACKET_PREFIX) - 1
+                if keep_len > 0:
+                    tail = bytes(self._rx_buf[-keep_len:])
+                    self._rx_buf = bytearray(tail if PACKET_PREFIX.startswith(tail) else b"")
+                else:
+                    self._rx_buf.clear()
                 break
 
             self._rx_buf = self._rx_buf[start:]
@@ -335,19 +341,6 @@ class KocomController:
         key = DeviceKey(
             device_type=frame.dev_type,
             room_index=frame.dev_room,
-            device_index = 1,
-            sub_type = SubType.CALL
-        )
-        platform = Platform.SWITCH
-        attribute = {}
-
-        state = frame.payload[5] == 0x03 if frame.payload[5] in (0x03, 0x04) else None
-        dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
-        states.append(dev)
-
-        key = DeviceKey(
-            device_type=frame.dev_type,
-            room_index=frame.dev_room,
             device_index=2,
             sub_type = SubType.DOOR_LOCK
         )
@@ -390,19 +383,6 @@ class KocomController:
         key = DeviceKey(
             device_type=frame.dev_type,
             room_index=frame.dev_room,
-            device_index = 1,
-            sub_type = SubType.CALL
-        )
-        platform = Platform.SWITCH
-        attribute = {}
-
-        state = frame.payload[5] == 0x03 if frame.payload in (0x03, 0x04) else None
-        dev = DeviceState(key=key, platform=platform, attribute=attribute, state=state)
-        states.append(dev)
-
-        key = DeviceKey(
-            device_type=frame.dev_type,
-            room_index=frame.dev_room,
             device_index=2,
             sub_type = SubType.DOOR_LOCK
         )
@@ -413,7 +393,6 @@ class KocomController:
         states.append(dev)
         return states
           
-   
     # TODO: 명령 상태 비교 로직 통합 (gateway.py)
     def _match_key_and(self, key: DeviceKey, cond: Predicate) -> Predicate:
         def _inner(dev: DeviceState) -> bool:
@@ -516,5 +495,3 @@ class KocomController:
 
         expect, timeout = self.build_expectation(key, action, **kwargs)
         return packet, expect, timeout
-
-   
