@@ -102,4 +102,6 @@ class DeviceState:
         self.state = state
         if name is None:
             self.name = f'{ROOM_MAP[self.key.room_index]} {self.key.device_type.name} {self.key.device_index}'
+        else:
+            self.name = name
         

@@ -20,6 +20,21 @@
             "cannot_connect": "Failed to connect."
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Configure EW device recovery options.",
+                "data": {
+                    "recovery_service": "Recovery service",
+                    "recovery_failures": "Consecutive send failures before recovery"
+                },
+                "data_description": {
+                    "recovery_service": "Example: shell_command.restart_ew12. Leave empty to disable recovery service calls.",
+                    "recovery_failures": "Call the recovery service after this many consecutive command send failures."
+                }
+            }
+        }
+    },
     "entity": {
         "light": {
             "light": {

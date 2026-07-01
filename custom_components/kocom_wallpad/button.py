@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from dataclasses import replace
 from typing import Any, List
 
 from homeassistant.components.button import ButtonEntity, ButtonDeviceClass
@@ -15,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .gateway import KocomGateway
 from .models import DeviceState
 from .entity_base import KocomBaseEntity
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, DOOR_OPEN_CALL_DELAY_SEC, LOGGER, SubType
 
 
 async def async_setup_entry(
@@ -57,6 +59,12 @@ class KocomDoorLock(KocomBaseEntity, ButtonEntity):
         return self._device.attribute.get("device_class", None)
     
     async def async_press(self) -> None:
+        call_key = replace(
+            self._device.key,
+            device_index=1,
+            sub_type=SubType.CALL,
+        )
+        if not await self.gateway.async_send_action(call_key, "turn_on"):
+            return
+        await asyncio.sleep(DOOR_OPEN_CALL_DELAY_SEC)
         await self.gateway.async_send_action(self._device.key, "turn_on")
-
-

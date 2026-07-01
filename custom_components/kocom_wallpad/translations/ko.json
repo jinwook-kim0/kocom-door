@@ -20,6 +20,21 @@
             "cannot_connect": "연결할 수 없습니다."
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "description": "EW 장치 무응답 복구 옵션을 설정하세요.",
+                "data": {
+                    "recovery_service": "복구 서비스",
+                    "recovery_failures": "복구 전 연속 송신 실패 횟수"
+                },
+                "data_description": {
+                    "recovery_service": "예: shell_command.restart_ew12. 비워두면 자동 복구 서비스를 호출하지 않습니다.",
+                    "recovery_failures": "명령 송신이 이 횟수만큼 연속 실패하면 복구 서비스를 호출합니다."
+                }
+            }
+        }
+    },
     "entity": {
         "light": {
             "light": {
